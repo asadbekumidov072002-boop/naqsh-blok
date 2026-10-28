@@ -84,7 +84,8 @@
   .toast small { display: block; font-size: 19px; color: var(--ivory); text-shadow: 0 2px 0 rgba(0,0,0,.45); }
   .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-3deg); }
   .toast.mega { font-size: 52px; color: #fff; text-shadow: 0 4px 0 #b3003b, 0 0 34px #ff4d8a; }
-  .boosters { width: 100%; max-width: 460px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .boosters { width: 100%; max-width: 460px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .boost.shop { background: color-mix(in srgb, var(--frame) 22%, var(--panel)); border-color: var(--frame); }
   .boost {
     position: relative; height: 52px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--frame) 40%, transparent);
     background: var(--panel); display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -152,6 +153,26 @@
   .btnrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .ghost { padding: 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--frame) 45%, transparent); background: transparent; color: var(--ivory); font-weight: 800; }
   .whoami { font-size: 12px; font-weight: 800; color: var(--muted); }
+  .adbtn { padding: 12px 14px; border-radius: 14px; border: 0; font-family: var(--display); font-size: 15px; color: #fff;
+    background: linear-gradient(180deg, #2bb673, #138a52); box-shadow: 0 4px 0 #0b5c36; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .adbtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0b5c36; }
+  .adbtn[hidden] { display: none; }
+  .earn { font-family: var(--display); color: #ffd84a !important; font-size: 16px !important; }
+  .coins-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(0,0,0,.3); font-family: var(--display); font-size: 16px; color: #ffd84a; justify-self: start; }
+  .shop-h { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; color: var(--frame); margin-top: 4px; }
+  .items { display: grid; gap: 8px; }
+  .item { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.05); }
+  .item .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(0,0,0,.25); }
+  .item .ic svg { width: 24px; height: 24px; }
+  .item b { display: block; font-weight: 800; }
+  .item span { display: block; font-size: 12px; color: var(--muted); font-weight: 700; }
+  .buy { min-width: 84px; padding: 10px 12px; border-radius: 12px; border: 0; font-weight: 800; font-size: 13px; background: var(--frame); color: #241300; }
+  .buy.owned { background: transparent; color: var(--muted); border: 1px solid color-mix(in srgb, var(--frame) 40%, transparent); }
+  .buy.ad { background: linear-gradient(180deg, #2bb673, #138a52); color: #fff; }
+  .buy.star { background: linear-gradient(180deg, #ffd84a, #f0a400); color: #3a2400; }
+  .buy[disabled] { opacity: .45; }
+  .swatch { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 44px; height: 44px; padding: 5px; border-radius: 12px; background: rgba(0,0,0,.3); }
+  .swatch i { border-radius: 4px; }
   @media (prefers-reduced-motion: reduce) { .toast, .score b, .level i { transition: opacity .2s; } .boost.pulse { animation: none; } }
 </style>
 
@@ -191,6 +212,9 @@
         </div>
         <p id="finalBest">Rekord: 0</p>
         <p class="whoami" id="finalWho"></p>
+        <p class="earn" id="finalCoins"></p>
+        <button class="adbtn" id="adContinue" hidden>▶ Reklama ko‘rib davom etish</button>
+        <button class="adbtn" id="adDouble" hidden>▶ Tangalarni ×2</button>
         <button class="play" id="again">Yana o‘ynash</button>
         <button class="ghost" id="overRank">Haftalik reyting</button>
         <button class="share" id="share">Natijani ulashish</button>
@@ -208,6 +232,9 @@
     </button>
     <button class="boost" id="b-roll" title="Yangi shakllar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" fill-opacity=".2"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/><circle cx="15" cy="15" r="1.4" fill="currentColor"/><circle cx="15" cy="9" r="1.4" fill="currentColor"/><circle cx="9" cy="15" r="1.4" fill="currentColor"/></svg>Yangi<span class="n" id="n-roll">1</span>
+    </button>
+    <button class="boost shop" id="b-shop" title="Do‘kon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8z" fill="currentColor" fill-opacity=".2"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Do‘kon<span class="n" id="n-coins">0</span>
     </button>
   </div>
 </div>
@@ -247,10 +274,27 @@
   </div>
 </div>
 
+<div class="sheet" id="shopSheet" hidden>
+  <div class="panel" role="dialog" aria-labelledby="shopTitle">
+    <h2 id="shopTitle">Do‘kon</h2>
+    <div class="coins-pill" aria-label="Tangalar"><span>●</span><span id="shopCoins">0</span> tanga</div>
+    <p>Tanga yig‘ing: oltin plitkalar, har o‘yin uchun (har 250 ochko = 1 tanga) va kunlik sovg‘a.</p>
+    <div class="shop-h">Busterlar</div>
+    <div class="items" id="shopBoosts"></div>
+    <div class="shop-h">Naqshlar (plitka dizayni)</div>
+    <div class="items" id="shopSkins"></div>
+    <div id="starsBlock" hidden>
+      <div class="shop-h">Telegram Stars</div>
+      <div class="items" id="shopStars"></div>
+    </div>
+    <button class="play" id="shopClose">Yopish</button>
+  </div>
+</div>
+
 <script>
 (() => {
   const N = 8;
-  const GLAZE = [ // [основа, блик, кромка, узор]
+  let GLAZE = [ // [основа, блик, кромка, узор] — текущий скин, меняется в магазине
     ["#22b3c4", "#7fe3ee", "#0d6e7c", "#e9fbff"],
     ["#2a54d6", "#7d9cff", "#14308a", "#dfe7ff"],
     ["#e8a21a", "#ffd37a", "#9a5c00", "#fff3d4"],
@@ -630,7 +674,7 @@
     }
     // монеты
     ctx.save(); ctx.font = `800 ${Math.round(gapH * .42)}px Manrope, "Segoe UI", sans-serif`; ctx.textBaseline = "middle"; ctx.textAlign = "right";
-    const coinR = gapH * .24, label = S.coins + "/" + COINS_FOR_BOOST;
+    const coinR = gapH * .24, label = String(wallet ? wallet.coins : 0);
     ctx.fillStyle = "#f6ecd6"; ctx.fillText(label, W - 4, midY);
     const lw = ctx.measureText(label).width;
     ctx.beginPath(); ctx.arc(W - 4 - lw - coinR - 6, midY, coinR, 0, 7); ctx.fillStyle = "#f5c11e"; ctx.fill();
@@ -717,13 +761,8 @@
     if (coins) addCoins(coins);
   }
   function addCoins(n) {
-    S.coins += n; tone(SCALE[11], .09, "square", .04); tone(SCALE[12], .12, "square", .04, .07);
-    while (S.coins >= COINS_FOR_BOOST) {
-      S.coins -= COINS_FOR_BOOST;
-      const k = ["bomb", "rot", "roll"][Math.floor(Math.random() * 3)];
-      S.boost[k]++;
-      setTimeout(() => toast("Sovg‘a!", "+1 " + { bomb: "Bomba", rot: "Burish", roll: "Yangi" }[k]), 700);
-    }
+    wallet.coins += n; saveWallet(); updateHud();
+    tone(SCALE[11], .09, "square", .04); tone(SCALE[12], .12, "square", .04, .07);
   }
 
   // ---------- ход ----------
@@ -806,7 +845,9 @@
 
   function endGame(why) {
     if (S.over) return;
-    S.over = true; S.overWhy = why; save(); submitResult();
+    S.over = true; S.overWhy = why;
+    S.earned = Math.floor(S.score / 250); if (S.earned) { wallet.coins += S.earned; saveWallet(); }
+    save(); submitResult();
     setTimeout(() => { showOver(); tone(SCALE[4], .25, "sine", .08); tone(SCALE[2], .3, "sine", .08, .18); tone(SCALE[0], .5, "sine", .08, .36); }, 600);
   }
   function shareText() {
@@ -833,6 +874,7 @@
     $("best").textContent = best;
     $("bar").style.width = (levelProgress() * 100).toFixed(1) + "%";
     for (const k of ["bomb", "rot", "roll"]) { $("n-" + k).textContent = S.boost[k]; $("b-" + k).disabled = S.boost[k] <= 0 || S.over; }
+    if (typeof wallet !== "undefined" && wallet) $("n-coins").textContent = wallet.coins;
     $("b-bomb").classList.toggle("active", bombMode);
   }
   function showOver() {
@@ -841,6 +883,9 @@
     $("finalWho").textContent = profile && profile.name ? profile.city + (profile.mahalla ? " · " + profile.mahalla + " mahallasi" : "") + " hisobiga yozildi" : "";
     $("finalBest").textContent = (S.score >= best && S.score > 0 ? "Yangi rekord!" : "Rekord: " + best) + (S.mode === "daily" ? " · bugun" : "");
     $("share").textContent = "Natijani ulashish"; $("sharebox").hidden = true;
+    $("finalCoins").textContent = S.earned ? "+" + S.earned + " tanga" : "";
+    $("adContinue").hidden = !Ads.ready() || S.continued;
+    $("adDouble").hidden = !Ads.ready() || !S.earned || S.doubled;
     $("over").hidden = false; $("again").focus();
   }
   $("again").addEventListener("click", () => { fresh(S.mode); save(); start(S); tone(SCALE[7]); });
@@ -1044,6 +1089,131 @@
     Board.submit({ pid: profile.id, name: profile.name || "O‘yinchi", city: profile.city || "Boshqa", mahalla: profile.mahalla || "",
       score: S.score, mode: S.mode, week: weekKey(), day: today(), tg: inTG ? 1 : 0 });
   }
+
+  // ---------- монетизация: кошелёк, скины, реклама, магазин ----------
+  // Adsgram (реклама в Telegram Mini Apps): вписать blockId из кабинета adsgram.ai — тогда появятся кнопки «смотреть рекламу».
+  const ADS = { adsgramBlockId: "" };
+  // Telegram Stars: нужен сервер бота (создаёт счёт и подтверждает оплату). Вписать адрес функции — тогда появится блок Stars.
+  const PAY = { invoiceUrl: "" };
+
+  const SKINS = {
+    rishton: { name: "Rishton", note: "Firuza va kobalt — klassika", price: 0, pal: GLAZE.slice(0, 6) },
+    lojuvard: { name: "Lojuvard", note: "Samarqand ko‘k gumbazlari", price: 60, pal: [
+      ["#2a54d6", "#7d9cff", "#14308a", "#dfe7ff"], ["#1aa0c8", "#7fdcf2", "#0b5f7a", "#e6faff"], ["#eef1ff", "#ffffff", "#9aa6cf", "#2a54d6"],
+      ["#0e2f8a", "#4e74e0", "#061a55", "#cfe0ff"], ["#d9b44a", "#ffe39a", "#8a6a10", "#fff6d6"], ["#5a3fc0", "#a08cff", "#2e1f7a", "#ece6ff"]] },
+    terrakota: { name: "Terrakota", note: "Buxoro g‘ishti va loy", price: 90, pal: [
+      ["#c0632f", "#f0a070", "#6e3214", "#fff0e0"], ["#8a4a2a", "#c88a62", "#4a220e", "#ffe8d6"], ["#e0b070", "#ffe0a8", "#8a6026", "#fff8ea"],
+      ["#2f7f7a", "#77c8c0", "#134a46", "#e0fffb"], ["#a83a2a", "#e8806e", "#5a160e", "#ffe6e0"], ["#5a6a3a", "#9aac72", "#2e3a18", "#f0ffe0"]] },
+    oltin: { name: "Oltin", note: "Zarhal — premium", price: 150, pal: [
+      ["#e8b923", "#fff0a0", "#8a6200", "#3a2a00"], ["#26262e", "#5a5a66", "#0a0a0e", "#e8b923"], ["#c9a24a", "#f6dc9a", "#6e5216", "#2a1e00"],
+      ["#b8860b", "#f0c850", "#5e4300", "#fff3c0"], ["#33333d", "#6b6b7a", "#101016", "#ffd84a"], ["#f5d77a", "#fff6cf", "#9c7a1e", "#5a4000"]] },
+  };
+  const STONE_GLAZE = GLAZE[6];
+  const BOOST_PRICE = { bomb: 8, rot: 5, roll: 5 };
+  const BOOST_NAME = { bomb: "Bomba", rot: "Burish", roll: "Yangi" };
+  const BOOST_NOTE = { bomb: "3×3 maydonni portlatadi", rot: "Hamma shakllarni buradi", roll: "Yangi 3 ta shakl" };
+  const STAR_PACKS = [ { id: "c100", coins: 100, stars: 25 }, { id: "c500", coins: 500, stars: 99 }, { id: "oltin", skin: "oltin", stars: 49 } ];
+
+  let wallet = lsGet("naqsh-wallet", null) || { coins: 0, skin: "rishton", owned: ["rishton"], daily: 0, adAt: 0 };
+  const saveWallet = () => lsSet("naqsh-wallet", wallet);
+  function applySkin() { const sk = SKINS[wallet.skin] || SKINS.rishton; GLAZE = sk.pal.concat([STONE_GLAZE]); }
+  applySkin();
+  if (wallet.daily !== today()) {
+    const first = !wallet.daily; wallet.daily = today(); wallet.coins += 10; saveWallet();
+    setTimeout(() => toast(first ? "Xush kelibsiz!" : "Kunlik sovg‘a", "+10 tanga"), 1500);
+  }
+
+  const Ads = {
+    ctrl: null,
+    ready() { return !!(this.ctrl || (inTG && ADS.adsgramBlockId && window.Adsgram)); },
+    init() {
+      if (!inTG || !ADS.adsgramBlockId) return;
+      const sc = document.createElement("script"); sc.src = "https://sad.adsgram.ai/js/sad.min.js"; sc.async = true;
+      sc.onload = () => { try { this.ctrl = window.Adsgram.init({ blockId: ADS.adsgramBlockId }); } catch (e) {} };
+      document.head.appendChild(sc);
+    },
+    async show() {
+      if (!this.ready()) return false;
+      try { if (!this.ctrl) this.ctrl = window.Adsgram.init({ blockId: ADS.adsgramBlockId }); const r = await this.ctrl.show(); return !!(r && r.done); }
+      catch (e) { toast("Reklama yo‘q", "Keyinroq urinib ko‘ring"); return false; }
+    },
+  };
+  Ads.init();
+
+  // реклама: продолжить после проигрыша (1 раз за партию)
+  $("adContinue").addEventListener("click", async () => {
+    if (!(await Ads.show())) return;
+    S.continued = true; S.over = false; S.overWhy = "";
+    for (let y = N - 3; y < N; y++) for (let x = 0; x < N; x++) { S.grid[y][x] = -1; S.gold[y][x] = false; }
+    if (S.grid[0].some(v => v >= 0)) for (let x = 0; x < N; x++) { S.grid[0][x] = -1; S.gold[0][x] = false; }
+    if (!S.tray.some(t => t && canPlaceAnywhere(t.s))) S.tray = newTray();
+    S.fuse = fuseMax(); $("over").hidden = true; save(); updateHud();
+    toast("Davom etamiz!", "Pastki 3 qator tozalandi"); tone(SCALE[7]); tone(SCALE[9], .12, "triangle", .07, .08);
+  });
+  // реклама: удвоить монеты за партию
+  $("adDouble").addEventListener("click", async () => {
+    if (!(await Ads.show())) return;
+    S.doubled = true; addCoins(S.earned); save();
+    $("adDouble").hidden = true; $("finalCoins").textContent = "+" + (S.earned * 2) + " tanga";
+  });
+
+  // магазин
+  function itemRow(icon, title, note, btnText, btnClass, onClick, disabled) {
+    const row = document.createElement("div"); row.className = "item";
+    const ic = typeof icon === "string" ? Object.assign(document.createElement("div"), { className: "ic", innerHTML: icon }) : icon;
+    const mid = document.createElement("div"); const b = document.createElement("b"); b.textContent = title; const sp = document.createElement("span"); sp.textContent = note; mid.append(b, sp);
+    const btn = document.createElement("button"); btn.className = "buy " + (btnClass || ""); btn.textContent = btnText; btn.disabled = !!disabled; btn.addEventListener("click", onClick);
+    row.append(ic, mid, btn); return row;
+  }
+  function swatch(pal) { const d = document.createElement("div"); d.className = "swatch"; pal.slice(0, 4).forEach(c => { const i = document.createElement("i"); i.style.background = "linear-gradient(180deg," + c[1] + "," + c[0] + ")"; d.appendChild(i); }); return d; }
+  const BOOST_ICON = { bomb: $("b-bomb").querySelector("svg").outerHTML, rot: $("b-rot").querySelector("svg").outerHTML, roll: $("b-roll").querySelector("svg").outerHTML };
+  function renderShop() {
+    $("shopCoins").textContent = wallet.coins;
+    const bx = $("shopBoosts"); bx.textContent = "";
+    for (const k of ["bomb", "rot", "roll"]) {
+      bx.appendChild(itemRow(BOOST_ICON[k], BOOST_NAME[k], BOOST_NOTE[k], BOOST_PRICE[k] + " tanga", "", () => {
+        if (wallet.coins < BOOST_PRICE[k]) { toast("Tanga yetmaydi", "O‘ynab yig‘ing"); return; }
+        wallet.coins -= BOOST_PRICE[k]; S.boost[k]++; saveWallet(); save(); updateHud(); checkStuck(false); renderShop(); tone(SCALE[8]);
+      }, wallet.coins < BOOST_PRICE[k] || S.over));
+    }
+    if (Ads.ready()) {
+      const wait = Math.max(0, 180000 - (Date.now() - (wallet.adAt || 0)));
+      bx.appendChild(itemRow('<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>', "Bepul buster", wait ? "Keyingisi " + Math.ceil(wait / 60000) + " daqiqadan so‘ng" : "Qisqa reklama ko‘ring", "Ko‘rish", "ad", async () => {
+        if (!(await Ads.show())) return;
+        const k = ["bomb", "rot", "roll"][Math.floor(Math.random() * 3)]; S.boost[k]++; wallet.adAt = Date.now(); saveWallet(); save(); updateHud(); checkStuck(false);
+        toast("Sovg‘a!", "+1 " + BOOST_NAME[k]); renderShop();
+      }, wait > 0 || S.over));
+    }
+    const sx = $("shopSkins"); sx.textContent = "";
+    for (const [id, sk] of Object.entries(SKINS)) {
+      const owned = wallet.owned.includes(id), on = wallet.skin === id;
+      sx.appendChild(itemRow(swatch(sk.pal), sk.name, sk.note, on ? "Tanlangan" : owned ? "Tanlash" : sk.price + " tanga", owned ? "owned" : "", () => {
+        if (!owned) { if (wallet.coins < sk.price) { toast("Tanga yetmaydi", sk.price + " tanga kerak"); return; } wallet.coins -= sk.price; wallet.owned.push(id); toast("Yangi naqsh!", sk.name); }
+        wallet.skin = id; applySkin(); saveWallet(); updateHud(); renderShop(); tone(SCALE[9]);
+      }, on));
+    }
+    const starsOn = inTG && !!PAY.invoiceUrl && !!tg.openInvoice;
+    $("starsBlock").hidden = !starsOn;
+    if (starsOn) {
+      const st = $("shopStars"); st.textContent = "";
+      STAR_PACKS.forEach(pk => st.appendChild(itemRow('<svg viewBox="0 0 24 24" fill="#ffd84a"><path d="M12 2l3 7 7 .6-5.3 4.6 1.6 7L12 17.8 5.7 21.2l1.6-7L2 9.6 9 9z"/></svg>',
+        pk.skin ? SKINS[pk.skin].name + " naqshi" : pk.coins + " tanga", "Telegram Stars orqali", "⭐ " + pk.stars, "star", () => buyStars(pk), pk.skin && wallet.owned.includes(pk.skin))));
+    }
+  }
+  async function buyStars(pk) {
+    try {
+      const r = await fetch(PAY.invoiceUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pack: pk.id, initData: tg.initData }) });
+      const { link } = await r.json();
+      tg.openInvoice(link, status => {
+        if (status !== "paid") return;
+        if (pk.coins) wallet.coins += pk.coins;
+        if (pk.skin && !wallet.owned.includes(pk.skin)) wallet.owned.push(pk.skin);
+        saveWallet(); updateHud(); renderShop(); toast("Rahmat!", "Xarid qabul qilindi");
+      });
+    } catch (e) { toast("Xatolik", "Keyinroq urinib ko‘ring"); }
+  }
+  $("b-shop").addEventListener("click", () => { renderShop(); $("shopSheet").hidden = false; });
+  $("shopClose").addEventListener("click", () => { $("shopSheet").hidden = true; });
 
   // веб: кнопка «играть в Telegram», установка как приложение и офлайн
   if (!inTG) {
