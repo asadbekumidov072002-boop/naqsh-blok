@@ -4,6 +4,23 @@
 <title>Naqsh Blok</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="O‘zbekcha Block Blast: shakllarni qo‘y, qator va ustunlarni portlat, kombo yig‘, Toshkentdan Nukusgacha shaharlarni och. Bepul, brauzerda va Telegramda.">
+<meta name="theme-color" content="#0a1a4f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Naqsh Blok — o‘zbekcha Block Blast">
+<meta property="og:description" content="Shakllarni qo‘y, qatorlarni portlat, kombo yig‘. Fitil yonyapti — tez o‘yna!">
+<meta property="og:url" content="https://asadbekumidov072002-boop.github.io/naqsh-blok/">
+<meta property="og:image" content="https://asadbekumidov072002-boop.github.io/naqsh-blok/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Naqsh Blok">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Manrope:wght@500;700;800&display=swap">
@@ -99,6 +116,8 @@
   .share { padding: 12px 16px; border-radius: 14px; border: 2px solid var(--frame); background: transparent; color: var(--frame); font-family: var(--display); font-size: 15px; }
   .sharebox { width: 100%; min-height: 70px; resize: none; border-radius: 10px; border: 1px solid var(--frame); background: rgba(0,0,0,.3); color: var(--ivory); font: 600 12px/1.4 var(--body); padding: 8px; }
   .sharebox[hidden] { display: none; }
+  .tglink { color: var(--muted); font-weight: 800; font-size: 13px; text-decoration: none; padding: 6px; }
+  .tglink:hover { color: var(--ivory); }
   @media (prefers-reduced-motion: reduce) { .toast, .score b, .level i { transition: opacity .2s; } .boost.pulse { animation: none; } }
 </style>
 
@@ -137,6 +156,7 @@
         <button class="play" id="again">Yana o‘ynash</button>
         <button class="share" id="share">Natijani ulashish</button>
         <textarea class="sharebox" id="sharebox" readonly hidden aria-label="Ulashish matni"></textarea>
+        <a class="tglink" id="tglink" href="https://t.me/naqshblok_bot" target="_blank" rel="noopener" hidden>Telegramda o‘ynash</a>
       </div>
     </div>
   </div>
@@ -166,8 +186,10 @@
     ["#6b6f80", "#a3a7b8", "#34374a", "#c9ccd8"], // 6 — камень (поднимается снизу)
   ];
   const STONE = 6;
-  const GAME_URL = "https://t.me/naqshblok_bot";
+  const BOT_URL = "https://t.me/naqshblok_bot", WEB_URL ="https://asadbekumidov072002-boop.github.io/naqsh-blok/";
   const tg = window.Telegram && window.Telegram.WebApp;
+  const inTG = !!(tg && tg.initData);           // открыто внутри Telegram или просто в браузере
+  const GAME_URL = inTG ? BOT_URL : WEB_URL;
   try { tg.ready(); tg.expand(); tg.disableVerticalSwipes && tg.disableVerticalSwipes(); tg.setHeaderColor && tg.setHeaderColor("#0a1a4f"); tg.setBackgroundColor && tg.setBackgroundColor("#050d2e"); } catch (e) {}
   const CITIES = [
     { name: "Toshkent",  bg: ["#1b3fa8", "#0a1a4f", "#050d2e"], frame: "#e8a21a" },
@@ -720,7 +742,11 @@
   $("share").addEventListener("click", () => {
     const text = shareText(), box = $("sharebox");
     const fallback = () => { box.value = text; box.hidden = false; box.focus(); box.select(); $("share").textContent = "Matnni nusxalang"; };
-    if (tg && tg.openTelegramLink) {
+    if (!inTG && navigator.share) {
+      navigator.share({ title: "Naqsh Blok", text: text.split(String.fromCharCode(10))[0], url: WEB_URL }).catch(() => {});
+      return;
+    }
+    if (inTG && tg.openTelegramLink) {
       try { tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(GAME_URL) + "&text=" + encodeURIComponent(text.split(String.fromCharCode(10))[0])); return; } catch (e) {}
     }
     try {
@@ -823,6 +849,11 @@
     }
   }
 
+  // веб: кнопка «играть в Telegram», установка как приложение и офлайн
+  if (!inTG) {
+    $("tglink").hidden = false;
+    if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
   window.claude?.hot?.snapshot?.(() => S);
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
   requestAnimationFrame(draw);

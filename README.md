@@ -1,3 +1,6 @@
 # Naqsh Blok
 
-Telegram mini-o‘yin: Block Blast o‘zbekcha uslubda. O‘ynash: https://t.me/naqshblok_bot
+O‘zbekcha Block Blast.
+
+- Brauzerda: https://asadbekumidov072002-boop.github.io/naqsh-blok/
+- Telegramda: https://t.me/naqshblok_bot
